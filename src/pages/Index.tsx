@@ -112,7 +112,7 @@ const Index = () => {
   useEffect(() => {
     const autoRefreshInterval = setInterval(() => {
       fetchClients();
-    }, 30000);
+    }, 3600000);
     
     return () => clearInterval(autoRefreshInterval);
   }, [searchQuery, selectedIndustry]);
