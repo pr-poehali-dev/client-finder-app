@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -74,17 +74,52 @@ const mockClients: Client[] = [
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndustry, setSelectedIndustry] = useState<string>('all');
-  const [clients, setClients] = useState<Client[]>(mockClients);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  const fetchClients = async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('query', searchQuery);
+      if (selectedIndustry !== 'all') params.append('industry', selectedIndustry);
+      params.append('minScore', '70');
+
+      const response = await fetch(`https://functions.poehali.dev/6d66fd3c-2a42-49eb-8f0a-1c9301ded4a4?${params.toString()}`);
+      const data = await response.json();
+      
+      setClients(data.clients || []);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('Ошибка загрузки клиентов:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchClients();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedIndustry]);
+
+  useEffect(() => {
+    const autoRefreshInterval = setInterval(() => {
+      fetchClients();
+    }, 30000);
+    
+    return () => clearInterval(autoRefreshInterval);
+  }, [searchQuery, selectedIndustry]);
 
   const industries = ['all', 'IT-стартапы', 'Розничная торговля', 'Финансы', 'Медицинские технологии', 'Строительство'];
 
-  const filteredClients = clients.filter(client => {
-    const matchesSearch = client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         client.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         client.needs.some(need => need.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesIndustry = selectedIndustry === 'all' || client.industry === selectedIndustry;
-    return matchesSearch && matchesIndustry;
-  });
+  const filteredClients = clients;
 
   const stats = {
     total: clients.length,
@@ -105,9 +140,17 @@ const Index = () => {
               ClientFinder AI
             </h1>
           </div>
-          <p className="text-muted-foreground text-lg">
-            Умный поиск клиентов с использованием искусственного интеллекта
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-muted-foreground text-lg">
+              Умный поиск клиентов с использованием искусственного интеллекта
+            </p>
+            {lastUpdate && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Icon name="Clock" size={14} />
+                Обновлено: {lastUpdate.toLocaleTimeString('ru-RU')}
+              </div>
+            )}
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -182,10 +225,21 @@ const Index = () => {
 
           <TabsContent value="search" className="space-y-6">
             <Card className="p-6 glass">
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <Icon name="Sparkles" size={24} className="text-primary" />
-                AI-поиск клиентов
-              </h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <Icon name="Sparkles" size={24} className="text-primary" />
+                  AI-поиск клиентов
+                </h2>
+                <Button 
+                  onClick={fetchClients} 
+                  disabled={isLoading}
+                  size="sm"
+                  className="gradient-primary"
+                >
+                  <Icon name={isLoading ? "Loader2" : "RefreshCw"} size={16} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  {isLoading ? 'Поиск...' : 'Обновить'}
+                </Button>
+              </div>
               
               <div className="space-y-4">
                 <div className="relative">
@@ -214,8 +268,22 @@ const Index = () => {
               </div>
             </Card>
 
+            {isLoading && (
+              <div className="flex items-center justify-center py-12">
+                <Icon name="Loader2" size={32} className="animate-spin text-primary" />
+                <span className="ml-3 text-muted-foreground">Ищем клиентов...</span>
+              </div>
+            )}
+
+            {!isLoading && filteredClients.length === 0 && (
+              <Card className="p-12 glass text-center">
+                <Icon name="Search" size={48} className="mx-auto mb-4 text-muted-foreground" />
+                <p className="text-lg text-muted-foreground">Клиенты не найдены. Попробуйте изменить параметры поиска.</p>
+              </Card>
+            )}
+
             <div className="grid grid-cols-1 gap-4">
-              {filteredClients.map((client, idx) => (
+              {!isLoading && filteredClients.map((client, idx) => (
                 <Card key={client.id} className="p-6 glass hover:border-primary/40 transition-all duration-300 hover:translate-x-1" style={{ animationDelay: `${idx * 50}ms` }}>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">

@@ -1,0 +1,41 @@
+{
+  "tests": [
+    {
+      "name": "Get all clients without filters",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "clients": "array",
+        "total": "number",
+        "timestamp": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Search clients by query",
+      "method": "GET",
+      "path": "/?query=crm&minScore=80",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "clients": "array",
+        "total": "number",
+        "query": "crm"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Filter by industry",
+      "method": "GET",
+      "path": "/?industry=IT-стартапы",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "clients": "array",
+        "filters": {
+          "industry": "IT-стартапы"
+        }
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
