@@ -117,7 +117,9 @@ const Index = () => {
     return () => clearInterval(autoRefreshInterval);
   }, [searchQuery, selectedIndustry]);
 
-  const industries = ['all', 'IT-стартапы', 'Розничная торговля', 'Финансы', 'Медицинские технологии', 'Строительство'];
+  const industries = ['all', 'IT-стартапы', 'Розничная торговля', 'Финансы', 'Медицинские технологии', 
+                      'Строительство', 'E-commerce', 'Логистика', 'Производство', 'Красота и здоровье',
+                      'Образование', 'Недвижимость', 'Общепит', 'Фитнес', 'Услуги'];
 
   const filteredClients = clients;
 
@@ -242,14 +244,22 @@ const Index = () => {
               </div>
               
               <div className="space-y-4">
-                <div className="relative">
-                  <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Введите запрос: 'нужна CRM', 'автоматизация', название компании..."
-                    className="pl-10 h-12 glass border-primary/30 focus:border-primary"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-foreground/90">
+                    Что ищет клиент?
+                  </label>
+                  <div className="relative">
+                    <Icon name="Search" size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="Например: создать сайт, бота, отредактировать фото, логотип..."
+                      className="pl-10 h-12 glass border-primary/30 focus:border-primary"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    💡 Примеры: "создать сайт", "telegram бот", "обработка фото", "реклама", "CRM-система"
+                  </p>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
